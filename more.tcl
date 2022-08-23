@@ -1,6 +1,6 @@
 #!/usr/bin/tclsh
 #constants
-set Myhome "/tmp"
+set Myhome "$::env(HOME)/me"
 
 #about
 proc myhelp {} { puts { Program for catalogized diary
@@ -12,18 +12,19 @@ proc myhelp {} { puts { Program for catalogized diary
 		or add record onto last of category
 	last <cat> [-l=<record>]
 		app line of data into cat	
-	app <data> <cat> [-l=<line>]
+	app <data> <cat> [-l=<line of cat, def end>]
 		read categoryes use tk or PAGER
 		include, def -i=r eq records only, more
 			r record, 
 			f files, 
 			i image, 
 			b blob
-	~show <cat> [-l=<limit>] [-v=<viewer, def PAGER or tk>] [-i=<include] 
+	~show <cat> [-n numbers of lines, def no num] [-l=<limit>]
+			[-v=<viewer, def PAGER>] [-i=<include] 
 		show records from diary use <viewer> without files and cats
 	~member [-f=<from, data(time)>] [-t=<to, eq from>] [-v=<viewer>]
-		run interactive ui on tk
-	~gui
+		run interactive ui on tk or web
+	~ui
 ~ - no realise now} 
 	exit 
 }
