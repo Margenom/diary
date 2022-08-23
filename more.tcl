@@ -52,7 +52,7 @@ proc args_require {data params count_require count_optional req_params} {
 }
 #myfunctions
 proc mytime {timeline} { return [clock scan $timeline -format {%Y%m%d%H%M}]}
-proc myhome {mypath} { global Myhome ; return "$Myhome/$mypath" }
+proc myhome {mypath} { global Myhome ; return [file join $Myhome $mypath]}
 proc mycat_story {cat data {line -1}} {
 	variable catfile
 	if {$line < 0} { set catfile [open [myhome $cat] a]; puts $catfile $data
@@ -69,11 +69,33 @@ proc mycat_story {cat data {line -1}} {
 	}
 	close $catfile
 }
+proc mycat_show {catname limit rules} { set catfile [open [myhome $catname] r]
+	set out ""
+	set lim 0
+	while {[gets $catfile ln] >= 0} {
+		set t 1
+		foreach r $rules {if [regexp [lindex $r 0] $ln] {
+			append out [[lindex $r 1] $ln]
+			set t 0
+			break
+		}}
+		if {$t} {append out $ln} 
+		append out "\n" 
+	}
+	close $catfile
+	return $out
+}
 proc myfiles_list {type {usefiles {}}} {
 	global files 
 	set pfiles $files
 	if {$usefiles != {}} {set pfiles $usefiles}
 	return [lsearch -all -inline -regexp $pfiles $type]
+}
+proc Tshow_recs {rname} {set fp [open [myhome $rname] r]
+	set tm [clock format $rname -format "\n==> %a %d.%m (%Y) %H:%M\n"]
+	append tm [read $fp]
+	close $fp
+	return $tm
 }
 set Types_recs {(?:^|.*/)\d{9,11}$}
 
@@ -101,11 +123,22 @@ switch $mode {
 	last {args_require $data $params 1 0 {}
 		set recs [myfiles_list $Types_recs]
 		set last ""
-		if [string eq "" $recs] { puts "No records in my base!" } else { set last [lindex [lsort $recs] 0] }
+		if [string eq "" $recs] { puts "No records in my base!" } else { set last [lindex [lsort $recs] end] }
 		set last [param_or_val l $last]
 		if [string eq "" $last] {exit}
 		mycat_story [lindex $data 0] $last }
 	app {args_require $data $params 2 0 {}
 		mycat_story [lindex $data 1] [lindex $data 0] [param_or_val l -1]}
+	show {args_require $data $params 1 0 {}
+		set include [param_or_val i "p"]
+		set moders [list]
+		for {set m 0} {$m < [string length $include]} {incr m} {
+			switch [string index $include $m] {
+				p {lappend moders [list $Types_recs Tshow_recs]}
+				default {break}}}
+		set pager [open [concat "|" [param_or_val p $::env(PAGER)]] w]
+		puts $pager [mycat_show [lindex $data 0] [param_or_val l -1] $moders ] 
+		close $pager 
+		}
 	default {myhelp}
 }
