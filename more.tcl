@@ -5,7 +5,7 @@ set Myhome "/tmp"
 #about
 proc myhelp {} { puts { Program for catalogized diary
 		create record
-	more [-t=<time, def now>] [-e=<editor, def EDITOR>]
+	more [-t=<time, YYYYMMDDhhmm def now>] [-e=<editor, def EDITOR>]
 		safe file into cat
 	safe <file> <cat>
 		add last record into cat
@@ -29,11 +29,13 @@ proc myhelp {} { puts { Program for catalogized diary
 }
 #functions
 # param or value
-proc param_or_val {name orval} {
+proc param_or_val {name orval {convert 0}} {
 	global params
 	set val [lsearch -index 0 -inline $params $name]
 	if [string eq $val ""] { return $orval
-	} else { return [lindex $val 1] }
+	} else { set val [lindex $val 1]
+		if [string eq $convert 0] { return $val} else { return [$convert $val]}
+	} 
 }
 # if count_optional <0 then unlimit optional arguments
 # req_params is list of names required params
@@ -48,6 +50,7 @@ proc args_require {data params count_require count_optional req_params} {
 	if [expr !($barg && $bpam)] {myhelp}
 }
 #myfunctions
+proc mytime {timeline} { return [clock scan $timeline -format {%Y%m%d%H%M}]}
 proc myhome {mypath} { global Myhome ; return "$Myhome/$mypath" }
 proc mycat_story {cat data {line -1}} {
 	variable catfile
@@ -89,7 +92,7 @@ set mode [lindex $other 0]
 set data [lrange $other 1 end]
 
 switch $mode {
-	more {exec >@stdout 2>@stderr [param_or_val e $::env(EDITOR)] [myhome [param_or_val t [clock seconds]]]}
+	more {exec >@stdout 2>@stderr [param_or_val e $::env(EDITOR)] [myhome [param_or_val t [clock seconds] mytime]]}
 	safe {args_require $data $params 2 0 {}
 		set name [file tail [lindex $data 0]]
 		mycat_story [lindex $data 1] $name
