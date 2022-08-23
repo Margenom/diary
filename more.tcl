@@ -15,14 +15,14 @@ proc myhelp {} { puts { Program for catalogized diary
 	app <data> <cat> [-l=<line of cat, def end>]
 		read categoryes use tk or PAGER
 		include, def -i=r eq records only, more
-			r record, 
-			f files, 
+			r records, 
+			f plan text, 
 			i image, 
-			b blob
-	~show <cat> [-n numbers of lines, def no num] [-l=<limit>]
-			[-v=<viewer, def PAGER>] [-i=<include] 
+			b blob or binary
+	show <cat> [-n numbers of lines, def no num] [-l=<limit>]
+			[-p=<viewer, def PAGER>] [-i=<include>] 
 		show records from diary use <viewer> without files and cats
-	~member [-f=<from, data(time)>] [-t=<to, eq from>] [-v=<viewer>]
+	member [-f=<from, time>] [-t=<to, eq from>] [-p=<pager>]
 		run interactive ui on tk or web
 	~ui
 ~ - no realise now} 
@@ -138,7 +138,12 @@ switch $mode {
 				default {break}}}
 		set pager [open [concat "|" [param_or_val p $::env(PAGER)]] w]
 		puts $pager [mycat_show [lindex $data 0] [param_or_val l -1] $moders ] 
-		close $pager 
-		}
+		close $pager }
+	member { set pager [open [concat "|" [param_or_val p $::env(PAGER)]] w]
+		set tfrom [param_or_val f 0 mytime]
+		set tto [param_or_val f [clock seconds] mytime]
+		foreach rec [lsort [myfiles_list $Types_recs]] {
+			if {$tfrom < $rec && $tto > $rec} {puts $pager [Tshow_recs $rec]}}
+		close $pager }
 	default {myhelp}
 }
