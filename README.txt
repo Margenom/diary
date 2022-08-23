@@ -10,14 +10,14 @@
 	app <data> <cat> [-l=<line of cat, def end>]
 		read categoryes use tk or PAGER
 		include, def -i=r eq records only, more
-			r record, 
-			f files, 
+			r records, 
+			f plan text, 
 			i image, 
-			b blob
-	~show <cat> [-n numbers of lines, def no num] [-l=<limit>]
-			[-v=<viewer, def PAGER>] [-i=<include] 
+			b blob or binary
+	show <cat> [-n numbers of lines, def no num] [-l=<limit>]
+			[-p=<viewer, def PAGER>] [-i=<include>] 
 		show records from diary use <viewer> without files and cats
-	~member [-f=<from, data(time)>] [-t=<to, eq from>] [-v=<viewer>]
+	member [-f=<from, time>] [-t=<to, eq from>] [-p=<pager>]
 		run interactive ui on tk or web
 	~ui
 ~ - no realise now
