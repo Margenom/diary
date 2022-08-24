@@ -2,99 +2,80 @@
 #constants
 set Myhome "$::env(HOME)/me"
 set WorkDir [info script]
-if [string eq [file type $WorkDir] link] {set WorkDir [file readlink $WorkDir]}
-set WorkDir [file dirname $WorkDir]
-#about
-proc myhelp {} {
-	global WorkDir
-	puts [read [open [file join $WorkDir "README.txt"] r]]
-	exit 
-}
+
+if [string eq [file type $WorkDir] link] {set WorkDir [file readlink $WorkDir]}; set WorkDir [file dirname $WorkDir]
+
 #functions
 # param or value
 proc param_or_val {name orval {convert 0}} {
 	global params
 	set val [lsearch -index 0 -inline $params $name]
-	if [string eq $val ""] { return $orval
-	} else { set val [lindex $val 1]
+	if [string eq $val ""] { return $orval } else { set val [lindex $val 1]
 		if [string eq $convert 0] { return $val} else { return [$convert $val]}
 	} 
 }
 # if count_optional <0 then unlimit optional arguments
 # req_params is list of names required params
 proc args_require {data params count_require count_optional req_params} {
-	set bpam 1
-	foreach p $req_params {
-		set pam [lsearch -index 0 $params $p]
-		set bpam [expr $bpam && ($pam != -1)]
-	}
-	set alen [llength $data]
-	set barg [expr ($alen >= $count_require) && (($alen <= ($count_optional + $count_require)) || ($count_optional < 0))]
-	if [expr !($barg && $bpam)] {myhelp}
+	set alen [llength $data]; set bpam 1
+	foreach p $req_params { set pam [lsearch -index 0 $params $p]; set bpam [expr $bpam && ($pam != -1)] }
+	if [expr !((($alen >= $count_require) && (($alen <= ($count_optional + $count_require)) || ($count_optional < 0))) && $bpam)] {myhelp}
 }
 #myfunctions
+proc myhelp {} { global WorkDir; puts [read [open [file join $WorkDir "README.txt"] r]]; exit}
 proc mytime {timeline} { return [clock scan $timeline -format {%Y%m%d%H%M}]}
 proc myhome {mypath} { global Myhome ; return [file join $Myhome $mypath]}
 proc mycat_story {cat data {line -1}} {
 	variable catfile
-	if {$line < 0} { set catfile [open [myhome $cat] a]; puts $catfile $data
-	} else { set catfile [open [myhome $cat] r+]
-		for {set ln 0} {$ln < $line} {incr ln} {
-			gets $catfile
-			if [eof $catfile] { puts "Out of lines category"; break }
-		}
+	if {$line < 0} { set catfile [open [myhome $cat] a]; puts $catfile $data } else { set catfile [open [myhome $cat] r+]
+		for {set ln 0} {$ln < $line} {incr ln} { gets $catfile
+			if [eof $catfile] { puts "Out of lines category"; break } }
 		set catoffset [tell $catfile]
 		set catoff [read $catfile]
 		seek $catfile $catoffset
 		puts $catfile $data
-		puts -nonewline $catfile $catoff
-	}
+		puts -nonewline $catfile $catoff }
 	close $catfile
 }
-proc mycat_show {catname limit rules} { set catfile [open [myhome $catname] r]
+proc mycat_show {catname limit numbers rules} { set catfile [open [myhome $catname] r]
 	set out ""
 	set lim 0
 	while {[gets $catfile ln] >= 0} {
+		if [string eq $numbers ""] {append out "#$lim "}
 		set t 1
 		foreach r $rules {if [regexp [lindex $r 0] $ln] {
 			append out [[lindex $r 1] $ln]
 			set t 0
-			break
-		}}
+			break }}
 		if {$t} {append out $ln} 
 		append out "\n" 
+		if {$lim == $limit} {break}
+		incr lim
 	}
 	close $catfile
 	return $out
 }
 proc myfiles_list {type {usefiles {}}} {
-	global files 
-	set pfiles $files
+	global files ; set pfiles $files
 	if {$usefiles != {}} {set pfiles $usefiles}
 	return [lsearch -all -inline -regexp $pfiles $type]
 }
 proc Tshow_recs {rname} {set fp [open [myhome $rname] r]
-	set tm [clock format $rname -format "\n==> %a %d.%m (%Y) %H:%M\n"]
+	set tm [clock format $rname -format "==> %a %d.%m (%Y) %H:%M\n"]
 	append tm [read $fp]
 	close $fp
 	return $tm
 }
-set Types_recs {(?:^|.*/)\d{9,11}$}
-
-#global temperary
-set files [lsort [glob -tails -directory $Myhome *]]
 
 #globals
-set params [list]
-set other [list]
+set Types_recs {(?:^|.*/)\d{9,11}$}
+set files [lsort [glob -tails -directory $Myhome *]]
+set params [list]; set other [list]
 # arg pair is -t -time -trap=no, but no -trap yes
-foreach p $argv {
-	if [regexp -- {^-([^=]+)(?:=(.+))?$} $p all pname pval] {
-		lappend params [list $pname $pval]
-	} else { lappend other $p}
-}
+foreach p $argv { if [regexp -- {^-([^=]+)(?:=(.+))?$} $p all pname pval] { lappend params [list $pname $pval] } else { lappend other $p} }
 set mode [lindex $other 0]
 set data [lrange $other 1 end]
+unset other
 
 switch $mode {
 	more {exec >@stdout 2>@stderr [param_or_val e $::env(EDITOR)] [myhome [param_or_val t [clock seconds] mytime]]}
@@ -119,13 +100,12 @@ switch $mode {
 				p {lappend moders [list $Types_recs Tshow_recs]}
 				default {break}}}
 		set pager [open [concat "|" [param_or_val p $::env(PAGER)]] w]
-		puts $pager [mycat_show [lindex $data 0] [param_or_val l -1] $moders ] 
+		puts $pager [mycat_show [lindex $data 0] [param_or_val l -1] [param_or_val n 0] $moders ] 
 		close $pager }
 	member { set pager [open [concat "|" [param_or_val p $::env(PAGER)]] w]
 		set tfrom [param_or_val f 0 mytime]
 		set tto [param_or_val f [clock seconds] mytime]
-		foreach rec [lsort [myfiles_list $Types_recs]] {
-			if {$tfrom < $rec && $tto > $rec} {puts $pager [Tshow_recs $rec]}}
+		foreach rec [lsort [myfiles_list $Types_recs]] { if {$tfrom < $rec && $tto > $rec} {puts $pager [Tshow_recs $rec]}}
 		close $pager }
 	default {myhelp}
 }
