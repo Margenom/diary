@@ -8,8 +8,6 @@ set WorkDir [file dirname $WorkDir]
 source "$WorkDir/config.tcl"
 source "$WorkDir/params.tcl"
 
-puts [list $Myhome $Mytime $args $params]
-
 #functions
 # if count_optional <0 then unlimit optional arguments
 # req_params is list of names required params
