@@ -1,19 +1,16 @@
 #!/usr/bin/tclsh
 #constants
-set Myhome "$::env(HOME)/me"
-set WorkDir [info script]
 
-if [string eq [file type $WorkDir] link] {set WorkDir [file readlink $WorkDir]}; set WorkDir [file dirname $WorkDir]
+set WorkDir [info script]
+if [string eq [file type $WorkDir] link] { set WorkDir [file readlink $WorkDir] }
+set WorkDir [file dirname $WorkDir]
+
+source "$WorkDir/config.tcl"
+source "$WorkDir/params.tcl"
+
+puts [list $Myhome $Mytime $args $params]
 
 #functions
-# param or value
-proc param_or_val {name orval {convert 0}} {
-	global params
-	set val [lsearch -index 0 -inline $params $name]
-	if [string eq $val ""] { return $orval } else { set val [lindex $val 1]
-		if [string eq $convert 0] { return $val} else { return [$convert $val]}
-	} 
-}
 # if count_optional <0 then unlimit optional arguments
 # req_params is list of names required params
 proc args_require {data params count_require count_optional req_params} {
@@ -60,22 +57,21 @@ proc myfiles_list {type {usefiles {}}} {
 	if {$usefiles != {}} {set pfiles $usefiles}
 	return [lsearch -all -inline -regexp $pfiles $type]
 }
+
+#type spec
+set Types_recs {(?:^|.*/)\d{9,11}$}
 proc Tshow_recs {rname} {set fp [open [myhome $rname] r]
-	set tm [clock format $rname -format "==> %a %d.%m (%Y) %H:%M\n"]
+	global Mytime
+	set tm [clock format $rname -format "==> $Mytime\n"]
 	append tm [read $fp]
 	close $fp
 	return $tm
 }
 
 #globals
-set Types_recs {(?:^|.*/)\d{9,11}$}
 set files [lsort [glob -tails -directory $Myhome *]]
-set params [list]; set other [list]
-# arg pair is -t -time -trap=no, but no -trap yes
-foreach p $argv { if [regexp -- {^-([^=]+)(?:=(.+))?$} $p all pname pval] { lappend params [list $pname $pval] } else { lappend other $p} }
-set mode [lindex $other 0]
-set data [lrange $other 1 end]
-unset other
+set mode [lindex $args 0]
+set data [lrange $args 1 end]
 
 switch $mode {
 	more {exec >@stdout 2>@stderr [param_or_val e $::env(EDITOR)] [myhome [param_or_val t [clock seconds] mytime]]}
