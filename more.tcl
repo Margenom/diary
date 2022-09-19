@@ -28,7 +28,7 @@ Configuration params (no config files)
 	-home=<here your collections: records, cats, files, logs>
 	[-imgs=<list of image exts, def jpeg,jpg,gif,png,webp>]
 	[-text=<list of text exts, def txt>]
-	[-timeformat=<use while printing, def "%a %d.%m (%Y) %H:%M {%utime}"]
+	[-timeformat=<use while printing, def "%a %d.%m (%Y) %H:%M {%s}"]
 	[-listext=<list extention, def ls. eq <listname>.ls>]
 }; exit}
 
@@ -65,7 +65,7 @@ if [params_check home] {myhelp}
 
 ### general functions
 proc myhome {mypath} { return [file join [pamVal home [pwd]] $mypath]}
-proc mytime {timesec} { return [clock format $timesec -format [pamVal timeformat "%a %d.%m (%Y) %H:%M {$timesec}"]]}
+proc mytime {timesec} { return [clock format $timesec -format [pamVal timeformat "%a %d.%m (%Y) %H:%M {%s}"]]}
 proc mytimescan {timeline} { return [clock scan $timeline -format {%Y%m%d%H%M}]}
 
 ### special functions
