@@ -184,7 +184,7 @@ switch [lindex $CLI_ARGS 0] {
 	member { set pager [open "|[pamVal p $::env(PAGER)]" w]
 		set tfrom [pamVal tfrom [pamVal ufrom 0] mytimescan]
 		set tto [pamVal tto [pamVal uto [clock seconds]] mytimescan]
-		foreach rec [lsort [myfiles_list $Trecs]] { if {$tfrom < $rec && $tto > $rec} {puts $pager [showTrec $rec]}}
+		foreach rec [lsort [myfiles_list $Trecs]] { if {$tfrom < $rec && $tto > $rec} {puts $pager [showTrec $rec 0]}}
 		close $pager }
 	log {argsVhelp 1 -1
 		set logfile [myhome "[lindex $data 0].[pamVal listext ls]"]
