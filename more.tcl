@@ -1,37 +1,4 @@
 #!/usr/bin/tclsh
-### About
-proc myhelp {} {
-puts {Program for catalogized diary
-		create record
-	more [-t=<time, YYYYMMDDhhmm def now>|-u=<utime, unix time>] [-e=<editor, def EDITOR>]
-		safe file into cat
-	safe <file> <cat> [-r=<row of cat, def end>]
-		add last record into cat
-		or add record onto last of category
-	last <cat> [-l=<record>] [-r=<row>]
-		app line of data into cat	
-	app <data> <cat> [-r=<row>]
-		include, def -i=r eq records only, more
-			r records (pager PAGER), 
-			f plan text (pager PAGER), 
-			i image as base64 (pager w3m -T text/html), 
-			a all as is (pager cat)
-	show <cat> [-n line numeration] [-l=<limit>] [-p=<pager>] [-i=<include>] 
-		show records from diary use <viewer> without files and cats
-	member [-tfrom=<from, time>|-ufrom=<utime>] [-html htmlmod] [-tto=<to, eq from>|-uto=<utime>] [-p=<pager>]
-		add record to timestamped list
-	log <log file> <descr part 0> .. <part n> [-t=<time>|-u=<utime>]
-		show record from timestamped list (log)
-	log <log file> [-p=<pager, def cat>]
-
-Configuration params (no config files)
-	-home=<here your collections: records, cats, files, logs>
-	[-imgs=<list of image exts, def jpeg,jpg,gif,png,webp>]
-	[-text=<list of text exts, def txt>]
-	[-timeformat=<use while printing, def "%a %d.%m (%Y) %H:%M {%s}"]
-	[-listext=<list extention, def ls. eq <listname>.ls>]
-}; exit}
-
 ### Command Line Input
 set CLI_PARAMS [list]; 
 set CLI_ARGS [list]
@@ -52,7 +19,7 @@ proc params_check pamlist { set bpam 1; global CLI_PARAMS
 }
 
 # param or value
-proc pamVal {name orval {convert 0}} {
+proc pamVal {name {orval false} {convert 0}} {
 	global CLI_PARAMS
 	set val [lsearch -index 0 -inline $CLI_PARAMS $name]
 	if [string eq $val ""] { return $orval } else { set val [lindex $val 1]
@@ -60,17 +27,79 @@ proc pamVal {name orval {convert 0}} {
 	}
 }
 
-# check required params (Configuration)
-if [params_check home] {myhelp}
-
 ### general functions
-proc myhome {mypath} { return [file join [pamVal home [pwd]] $mypath]}
-proc mytime {timesec} { return [clock format $timesec -format [pamVal timeformat "%a %d.%m (%Y) %H:%M {%s}"]]}
-proc mytimescan {timeline} { return [clock scan $timeline -format {%Y%m%d%H%M}]}
+proc myhome {mypath} { return [file join [pamVal home] $mypath]}
+proc mytime {timesec} { return [clock format $timesec -format [pamVal timeformat]]}
+proc mytimescan {timeline} { return [clock scan $timeline -format [pamVal timescan]]}
+proc myhelp {} {global ABOUT; puts $ABOUT; exit}
+
+# About
+set ABOUT {Program for catalogized diary
+		create record
+	more [-t=<time, se -timescan def now>|-u=<utime, unix time>] [-e=<editor, def EDITOR>]
+		create video record
+#	video [-t=<time>|-u=<utime>] [-c=<record command format>] [<message>]
+		create audio record
+#	audio [-t=<time>|-u=<utime>] [-c=<record command format>] [<message>]
+		safe file into cat
+	safe <file> <cat> [-r=<row of cat, def end>]
+		add last record into cat
+		or add record onto last of category
+	last <cat> [-l=<record>] [-r=<row>]
+		app line of data into cat	
+	app <data> <cat> [-r=<row>]
+		include, def -i=r eq records only, more
+			r records (pager PAGER), 
+			f plan text (pager PAGER), 
+			i image as base64 (pager w3m -T text/html), 
+			a all as is (pager cat)
+	show <cat> [-n line numeration] [-l=<limit>] [-p=<pager>] [-i=<include>] 
+		show records from diary use <viewer> without files and cats
+	member [-tfrom=<from, time def 0>|-ufrom=<utime>] [-html htmlmod] [-tto=<to, eq from def now>|-uto=<utime>] [-p=<pager>]
+		add record to timestamped list
+	log <log file> <descr part 0> .. <part n> [-t=<time>|-u=<utime>]
+		show record from timestamped list (log)
+	log <log file> [-p=<pager, def cat>]
+
+Configuration params (no config files)
+}
+proc about-include {name about {def ""} {defhum ""}} { global ABOUT; global CLI_PARAMS
+proc opt? {cont} {upvar def def; if [string eq "" $def] {return $cont} else {return "\[$cont\]"}}
+proc app {val} {return ", now is $val"}
+	set mval [pamVal $name ""]
+	if [string eq $mval ""] { 
+		if [string eq $def ""] { set ABOUT "$ABOUT\t-$name=<$about>\n"
+		} else { if [string eq $defhum ""] {set df $def} else {set df $defhum}
+			set ABOUT "$ABOUT\t[opt? "-$name=<$about, def \"$df\">"]\n" 
+			lappend CLI_PARAMS [list $name $def] }
+	} else { set ABOUT "$ABOUT\t-$name=$mval\n"}
+}
+
+about-include "home" "here your collections: records, cats, files. logs" 
+set tmf [list png jpg jpeg gif webp]
+about-include "imgs" "list of image exts" $tmf [join $tmf ","]
+set tmf [list txt md html htm]
+about-include "text" "list of text exts" $tmf [join $tmf ","]
+about-include "listext" "list file extention" ls
+about-include "timescan" "format for time scaning" "%Y%m%d%H%M"
+about-include "timeformat" "use while printing"	"%a %d.%m (%Y) %H:%M {%s}"
+#about-include "home-rec" "here located records" [myhome] 
+#about-include "home-safe" "here located files, else for recs and logs make link" [myhome]
+#about-include "home-logs" "here located logs" [myhome] 
+#about-include "home-cat" "here located cats" [myhome] 
+#about-include "home-audio" "here located audio recs" [myhome] 
+#about-include "mediaabout" "location file, what collect message about media files" [myhome "/.about"]
+#about-include "form-rec" "format audio records" "%s"
+#about-include "form-audio" "format audio records" "%s.ogg"
+#about-include "form-video" "format video records" "%s.ogv"
+unset tmf
+
+### check required params (Configuration)
+if [params_check home] {myhelp}
 
 ### special functions
 proc myfiles_list {type {usefiles {}}} {
-	set files [lsort [glob -tails -directory [pamVal home [pwd]] *]]
+	set files [lsort [glob -tails -directory [pamVal home] *]]
 	set pfiles $files
 	if {$usefiles != {}} {set pfiles $usefiles}
 	return [lsearch -all -inline -regexp $pfiles $type]
@@ -125,7 +154,7 @@ proc showTrec {name mode} {set fp [open [myhome $name] r]; switch $mode {
 	return $out
 }
 
-set Ttext_types [pamVal text [list txt]]
+set Ttext_types [pamVal text]
 set Ttext "^(.*)\\.([join Ttext_types "|"])\$" 
 proc showTtext {name mode} {set fp [open [myhome $name]]; switch $mode {
 	2 { set out "[Whead "File $name"][Wtext [read $fp]]"}
@@ -135,7 +164,7 @@ proc showTtext {name mode} {set fp [open [myhome $name]]; switch $mode {
 	return $out
 }
 
-set Timg_types [pamVal imgs [list png jpg jpeg gif webp]]
+set Timg_types [pamVal imgs]
 set Timg "^(.*)\\.([join Timg_types "|"])\$" 
 proc showTimg {name mode} {set fp [open [myhome $name]]; switch $mode {
 	2 { package require base64
@@ -187,7 +216,7 @@ switch [lindex $CLI_ARGS 0] {
 		foreach rec [lsort [myfiles_list $Trecs]] { if {$tfrom < $rec && $tto > $rec} {puts $pager [showTrec $rec 0]}}
 		close $pager }
 	log {argsVhelp 1 -1
-		set logfile [myhome "[lindex $data 0].[pamVal listext ls]"]
+		set logfile [myhome "[lindex $data 0].[pamVal listext]"]
 		if {![args_check 1 0]} { 
 			set lfs [open $logfile r]
 			set pager [open "|[pamVal p cat]" w]
