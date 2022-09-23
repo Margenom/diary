@@ -29,3 +29,5 @@ Configuration params (no config files)
 	[-listext=<list extention, def ls. eq <listname>.ls>]
 
 Tips to usage: configuration store in bashrc as alias
+	and no edit records like in real diary (utime in name help you)
+	categories need for defenition diffirent types of diary
