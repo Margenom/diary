@@ -37,10 +37,6 @@ proc myhelp {} {global ABOUT; puts $ABOUT; exit}
 set ABOUT {Program for catalogized diary
 		create record
 	more [-t=<time, se -timescan def now>|-u=<utime, unix time>] [-e=<editor, def EDITOR>]
-		create video record
-#	video [-t=<time>|-u=<utime>] [-c=<record command format>] [<message>]
-		create audio record
-#	audio [-t=<time>|-u=<utime>] [-c=<record command format>] [<message>]
 		safe file into cat
 	safe <file> <cat> [-r=<row of cat, def end>]
 		add last record into cat
@@ -64,22 +60,19 @@ set ABOUT {Program for catalogized diary
 Configuration params (no config files)
 }
 proc about-include {name about {def ""} {defhum ""}} { global ABOUT; global CLI_PARAMS
-proc opt? {cont} {upvar def def; if [string eq "" $def] {return $cont} else {return "\[$cont\]"}}
-proc app {val} {return ", now is $val"}
 	set mval [pamVal $name ""]
 	if [string eq $mval ""] { 
-		if [string eq $def ""] { set ABOUT "$ABOUT\t-$name=<$about>\n"
+		if [string eq $def ""] { set ln "-$name=<$about>"
 		} else { if [string eq $defhum ""] {set df $def} else {set df $defhum}
-			set ABOUT "$ABOUT\t[opt? "-$name=<$about, def \"$df\">"]\n" 
+			set ln "\[-$name=<$about, def \"$df\">\]" 
 			lappend CLI_PARAMS [list $name $def] }
-	} else { set ABOUT "$ABOUT\t-$name=$mval\n"}
+	} else { set ln "-$name=$mval"}
+	set ABOUT "$ABOUT\t$ln\n"
 }
 
 about-include "home" "here your collections: records, cats, files. logs" 
-set tmf [list png jpg jpeg gif webp]
-about-include "imgs" "list of image exts" $tmf [join $tmf ","]
-set tmf [list txt md html htm]
-about-include "text" "list of text exts" $tmf [join $tmf ","]
+about-include "imgs" "list of image exts" "png,jpg,jpeg,gif,webp"
+about-include "text" "list of text exts" "txt,md,html,htm"
 about-include "listext" "list file extention" ls
 about-include "timescan" "format for time scaning" "%Y%m%d%H%M"
 about-include "timeformat" "use while printing"	"%a %d.%m (%Y) %H:%M {%s}"
@@ -87,12 +80,8 @@ about-include "timeformat" "use while printing"	"%a %d.%m (%Y) %H:%M {%s}"
 #about-include "home-safe" "here located files, else for recs and logs make link" [myhome]
 #about-include "home-logs" "here located logs" [myhome] 
 #about-include "home-cat" "here located cats" [myhome] 
-#about-include "home-audio" "here located audio recs" [myhome] 
 #about-include "mediaabout" "location file, what collect message about media files" [myhome "/.about"]
 #about-include "form-rec" "format audio records" "%s"
-#about-include "form-audio" "format audio records" "%s.ogg"
-#about-include "form-video" "format video records" "%s.ogv"
-unset tmf
 
 ### check required params (Configuration)
 if [params_check home] {myhelp}
@@ -154,7 +143,7 @@ proc showTrec {name mode} {set fp [open [myhome $name] r]; switch $mode {
 	return $out
 }
 
-set Ttext_types [pamVal text]
+set Ttext_types [split [pamVal text] ","]
 set Ttext "^(.*)\\.([join Ttext_types "|"])\$" 
 proc showTtext {name mode} {set fp [open [myhome $name]]; switch $mode {
 	2 { set out "[Whead "File $name"][Wtext [read $fp]]"}
@@ -164,7 +153,7 @@ proc showTtext {name mode} {set fp [open [myhome $name]]; switch $mode {
 	return $out
 }
 
-set Timg_types [pamVal imgs]
+set Timg_types [split [pamVal imgs] ","]
 set Timg "^(.*)\\.([join Timg_types "|"])\$" 
 proc showTimg {name mode} {set fp [open [myhome $name]]; switch $mode {
 	2 { package require base64
