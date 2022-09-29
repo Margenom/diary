@@ -19,11 +19,13 @@ proc params_check pamlist { set bpam 1; global CLI_PARAMS
 }
 
 # param or value
-proc pamVal {name {orval false} {convert 0}} {
+proc pamVal {name {orval false} {convert 0} {empty_val true}} {
 	global CLI_PARAMS
 	set val [lsearch -index 0 -inline $CLI_PARAMS $name]
 	if [string eq $val ""] { return $orval } else { set val [lindex $val 1]
-		if [string eq $convert 0] { return $val} else { return [$convert $val]}
+		if [string eq $convert 0] { 
+			if [string eq $val ""] { return $empty_val} else { return $val}
+		} else { return [$convert $val]}
 	}
 }
 
@@ -55,7 +57,7 @@ set ABOUT {Program for catalogized diary
 		add record to timestamped list
 	log <log file> <descr part 0> .. <part n> [-t=<time>|-u=<utime>]
 		show record from timestamped list (log)
-	log <log file> [-p=<pager, def cat>]
+	log <log file> [-p=<pager, def cat>] [-h hide date]
 
 Configuration params (no config files)
 }
@@ -207,11 +209,17 @@ switch [lindex $CLI_ARGS 0] {
 	log {argsVhelp 1 -1
 		set logfile [myhome "[lindex $data 0].[pamVal listext]"]
 		if {![args_check 1 0]} { 
+			if {![file exists $logfile]} {
+				puts "List $logfile no exists."
+				exit
+			}
 			set lfs [open $logfile r]
 			set pager [open "|[pamVal p cat]" w]
+			set hide_date [pamVal h false]
 			while {[gets $lfs ln] > 0} {
 				if [regexp {^(\d+)\t(.+)$} $ln all date mesg] {
-					puts $pager "[mytime $date]\t$mesg"
+					if {!$hide_date} {puts -nonewline $pager "[mytime $date]\t" }
+					puts $pager $mesg
 				}
 			}
 			close $lfs
