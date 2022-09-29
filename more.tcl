@@ -209,8 +209,8 @@ switch [lindex $CLI_ARGS 0] {
 	log {argsVhelp 1 -1
 		set logfile [myhome "[lindex $data 0].[pamVal listext]"]
 		if {![args_check 1 0]} { 
-			if {![file exists $logfile]} {
-				puts "List $logfile no exists."
+			if {![file readable $logfile]} {
+				puts "No find $logfile."
 				exit
 			}
 			set lfs [open $logfile r]
