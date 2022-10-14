@@ -1,4 +1,8 @@
 #!/usr/bin/tclsh
+# more v0.5: System for keep diary and more 
+# Copyright (C) 2022 Daniil Shvachkin margenom@ya.ru
+# Released under the terms of the General Public License version 2.0
+
 ### Command Line Input
 set CLI_PARAMS [list]; 
 set CLI_ARGS [list]
