@@ -8,30 +8,27 @@
 	more [-t=<time, se -timescan def now>|-u=<utime, unix time>] [-e=<editor, def EDITOR>]
 		safe file into cat
 	safe <file> <cat> [-r=<row of cat, def end>]
-		add last record into cat
-		or add record onto last of category
-	last <cat> [-l=<record>] [-r=<row>]
-		app line of data into cat	
+		app line of data into cat
 	app <data> <cat> [-r=<row>]
-		include, def -i=r eq records only, more
-			r records (pager PAGER), 
-			f plan text (pager PAGER), 
-			i image as base64 (pager w3m -T text/html), 
-			a all as is (pager cat)
-	show <cat> [-n line numeration] [-l=<limit>] [-p=<pager>] [-i=<include>] 
+		show records in category (rules can control interpritation line)
+	show <cat> [-n line numeration] [-l=<limit>] [-p=<pager>] 
+		add last record into cat or add record onto last of category
+	last [<cat>, else show last] [-l=<record>] [-r=<row>]
 		show records from diary use <viewer> without files and cats
-	member [-tfrom=<from, time def 0>|-ufrom=<utime>] [-html htmlmod] [-tto=<to, eq from def now>|-uto=<utime>] [-p=<pager>]
-		add record to timestamped list
+	member [-tfrom=<-||->|-ufrom=<utime, def 0>] [-tto=<to, eq from def now>|-uto=<-||->] [-p=<pager>]
+		add record to timestamped list, or show it
 	log <log file> <descr part 0> .. <part n> [-t=<time>|-u=<utime>]
-		show record from timestamped list (log)
-	log <log file> [-p=<pager, def cat>] [-h hide date]
+	log <log file> [-p=<pager, def cat>] [-h hide date] 
 
 # Configuration params (no config files)
 
 	-home=<here your collections: records, cats, files. logs>
-	[-imgs=<list of image exts, def "png,jpg,jpeg,gif,webp">]
-	[-text=<list of text exts, def "txt,md,html,htm">]
-	[-listext=<list file extention, def "ls">]
-	[-timescan=<format for time scaning, def "%Y%m%d%H%M">]
-	[-timeformat=<use while printing, def "%a %d.%m (%Y) %H:%M {%s}">]
+	[-record-type=<record type search patern, def '(?:^|.*/)\d{9,11}$'>]
+	[-listext=<list file extention, def 'ls'>]
+	[-timescan=<format for time scaning, def '%Y%m%d%H%M'>]
+	[-timeformat=<use while printing, def '%a %d.%m (%Y) %H:%M {%s}'>]
+	[-show-rules=<rules how interpritate cat line, def '
+	{{regexp [pam record-type] $ln} {return "==> [mytime $ln]\n[read-exec "cat [myhome $ln]"]"}}
+	{{regexp [types-ext {text txt}] $ln name ext} {return "==> $ln\n[read-exec "cat [myhome $ln]"]"}}
+	{{expr 1} {return "=-=> $ln"}}'>]
 

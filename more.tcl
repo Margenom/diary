@@ -77,6 +77,11 @@ proc mycat_story {cat data line} {
 		puts -nonewline $catfile $catoff }
 	close $catfile
 }
+about-include "listext" "list file extention" ls
+about-include "timescan" "format for time scaning" "%Y%m%d%H%M"
+proc mytimescan {timeline} { return [clock scan $timeline -format [pam timescan]]}
+about-include "timeformat" "use while printing"	"%a %d.%m (%Y) %H:%M {%s}"
+proc mytime {timesec} { return [clock format $timesec -format [pam timeformat]]}
 about-include "show-rules" "rules how interpritate cat line" {
 	{{regexp [pam record-type] $ln} {return "==> [mytime $ln]\n[read-exec "cat [myhome $ln]"]"}}
 	{{regexp [types-ext {text txt}] $ln name ext} {return "==> $ln\n[read-exec "cat [myhome $ln]"]"}}
@@ -96,11 +101,6 @@ proc myshow {ln} {
 		}
 	}
 }
-about-include "listext" "list file extention" ls
-about-include "timescan" "format for time scaning" "%Y%m%d%H%M"
-proc mytimescan {timeline} { return [clock scan $timeline -format [pam timescan]]}
-about-include "timeformat" "use while printing"	"%a %d.%m (%Y) %H:%M {%s}"
-proc mytime {timesec} { return [clock format $timesec -format [pam timeformat]]}
 
 # commands
 set COMMANDS [list]
@@ -125,10 +125,6 @@ proc command-exec {fail} { global COMMANDS; global CLI_ARGS
 	# arguments data
 	set data [lrange $CLI_ARGS 1 end]
 
-	# web mod
-	proc Whead {cont} {return "<h4>$cont</h4>"}
-	proc Wtext {cont} {return "<pre>$cont</pre>"}
-	
 	# execute command
 	if {$args} [lindex $cmd 3] $fail
 }
@@ -182,8 +178,8 @@ command-collect member 0 0 {member [-tfrom=<-||->|-ufrom=<utime, def 0>] [-tto=<
 	close $pager 
 } {show records from diary use <viewer> without files and cats}
 
-command-collect log 1 -1 {log <log file> [-p=<pager, def cat>] [-h hide date] 
-	log <log file> <descr part 0> .. <part n> [-t=<time>|-u=<utime>]} {
+command-collect log 1 -1 {log <log file> <descr part 0> .. <part n> [-t=<time>|-u=<utime>]
+	log <log file> [-p=<pager, def cat>] [-h hide date] } {
 
 	set logfile [myhome "[lindex $data 0].[pam listext]"]
 	set msgline [lrange $data 1 end]
