@@ -37,7 +37,7 @@ proc pam {name {orval false} {convert 0} {empty_val true}} {
 
 
 # About
-set ABOUT { Program for catalogized diary}
+set ABOUT "" 
 proc about-include {name about {def ""} {defhum ""}} { global ABOUT; global CLI_PARAMS
 	set mval [pam $name ""]
 	if [string eq $mval ""] { 
@@ -53,9 +53,9 @@ proc about-switch {categ} { global ABOUT; set ABOUT "$ABOUT$categ\n"; }
 
 # configuration
 about-switch {Configuration params (no config files) }
-about-include "home" "here your collections: records, cats, files. logs" 
+about-include home "here your collections: records, cats, files. logs" 
 proc myhome {mypath} { return [file join [pam home] $mypath]}
-about-include "record-type" {(?:^|.*/)\d{9,11}$}
+about-include record-type {record type search patern} {(?:^|.*/)\d{9,11}$}
 proc myfiles {type {usefiles {}}} {
 	if {$usefiles != {}} {set files $usefiles} else {
 		set files [glob -tails -directory [pam home] *]}
@@ -78,21 +78,21 @@ proc mycat_story {cat data line} {
 	close $catfile
 }
 about-include "show-rules" "rules how interpritate cat line" {
-	{{regex [pam record-type] $ln} {return "==> [mytime $ln]\n[read-exec cat [mypath $ln]]"}}
-	{{regex [types-ext text txtl $ln name ext]} {return "==> $ln\n[read-exec cat [mypath $ln]]"}}
+	{{regexp [pam record-type] $ln} {return "==> [mytime $ln]\n[read-exec "cat [myhome $ln]"]"}}
+	{{regexp [types-ext {text txt}] $ln name ext} {return "==> $ln\n[read-exec "cat [myhome $ln]"]"}}
 	{{expr 1} {return "=-=> $ln"}}}
 proc myshow {ln} {
-	proc read-exec command {
-		set pipe [open [linsert command 0 {|}] r]
+	proc read-exec {command} {
+		set pipe [open [linsert $command 0 {|}] r]
 		set out [read $pipe]
 		close $pipe
 		return $out
 	}
-	proc types-ext ext-list { return "^(.*)\\.([join ext-list "|"])\$" }
+	proc types-ext {ext-list} { return "^(.*)\\.([join ${ext-list} "|"])\$" }
 
-	foreach rule [pam catline-rules] {
+	foreach rule [pam show-rules] {
 		if [eval [lindex $rule 0]] {
-		return [eval [lindex $rule 1]]
+			return [eval [lindex $rule 1]]
 		}
 	}
 }
@@ -156,16 +156,18 @@ command-collect show 1 0 {show <cat> [-n line numeration] [-l=<limit>] [-p=<page
 	while {[gets $catfile ln] >= 0} {
 		if [string eq [pam n 0] ""] {puts -nonewline $pager "#$lim "}
 		puts $pager "[myshow $ln]\n" 
-		if $lim {break} ; incr lim -1
+		if {!$lim} {break} ; incr lim -1
 	}
 	close $catfile
 	close $pager 
 }  {show records in category (rules can control interpritation line)}
 
-command-collect last 1 0 {last <cat> [-l=<record>] [-r=<row>]} {
-	set last [pam l [lindex [lsort [myfiles [pam record-type]] end]]]
+command-collect last 0 1 {last [<cat>, else show last] [-l=<record>] [-r=<row>]} {
+	set last [pam l [lindex [lsort [myfiles [pam record-type]]] end]]
 	if {$last == {}} {puts "No records in my base!" } else { 
-		mycat_story [lindex $data 0] $last [pam r -1]
+		if [llength $data] {
+			mycat_story [lindex $data 0] $last [pam r -1]
+		} else { puts $last}
 	}
 } {add last record into cat or add record onto last of category}
 
@@ -180,10 +182,12 @@ command-collect member 0 0 {member [-tfrom=<-||->|-ufrom=<utime, def 0>] [-tto=<
 	close $pager 
 } {show records from diary use <viewer> without files and cats}
 
-command-collect log 1 -1 {log <log file> [[-p=<pager, def cat>] [-h hide date]] [<descr part 0> .. <part n> [-t=<time>|-u=<utime>]]} {
+command-collect log 1 -1 {log <log file> [-p=<pager, def cat>] [-h hide date] 
+	log <log file> <descr part 0> .. <part n> [-t=<time>|-u=<utime>]} {
+
 	set logfile [myhome "[lindex $data 0].[pam listext]"]
-	set data [lrange $data 0 end]
-	if {![llength $data]} { 
+	set msgline [lrange $data 1 end]
+	if {![llength $msgline]} { 
 		if {![file readable $logfile]} {
 			puts "No find $logfile."
 			exit
@@ -192,15 +196,15 @@ command-collect log 1 -1 {log <log file> [[-p=<pager, def cat>] [-h hide date]] 
 		set pager [open "|[pam p cat]" w]
 		set hide_date [pam h false]
 		while {[gets $lfs ln] > 0} {
-			if [regexp {^(\d+)\t(.+)$} $ln all date mesg] {
-				if {!$hide_date} {puts -nonewline $pager "[mytime $date]\t" }
+			if [regexp {^(\d+)\t(.+)$} $ln all time mesg] {
+				if {!$hide_date} {puts -nonewline $pager "[mytime $time]\t" }
 				puts $pager $mesg
 			}
 		}
 		close $lfs
 		close $pager
-	} else {
-		puts [open $logfile a] "[pam t [pam u [clock seconds]] mytimescan]\t[lrange $data 1 end]"} } {add record to timestamped list, or show it}
+	} else { puts [open $logfile a] "[pam t [pam u [clock seconds]] mytimescan]\t$msgline" }
+} {add record to timestamped list, or show it}
 
 ### check required params (Configuration)
 proc help-gen {} {global ABOUT; puts $ABOUT; exit}
