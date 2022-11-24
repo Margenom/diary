@@ -1,6 +1,6 @@
 #!/usr/bin/tclsh
-# more v0.5: System for keep diary and more 
-# Copyright (C) 2022 Daniil Shvachkin <margenom at ya dot ru>
+# more v0.8: System for keep diary and more 
+# Copyleft (Ɔ) 2022 Daniil Shvachkin <margenom at ya dot ru>
 # Released under the terms of the GNU General Public License version 2.0
 
 ### Command Line Input
