@@ -131,8 +131,8 @@ proc command-exec {fail} { global COMMANDS; global CLI_ARGS
 
 about-switch "Commands"
 
-command-collect more 0 0 {more [-t=<time, se -timescan def now>|-u=<utime, unix time>] [-e=<editor, def EDITOR>]} {
-	exec >@stdout 2>@stderr [pam e $::env(EDITOR)] [myhome [pam t [pam u [clock seconds]] mytimescan]]
+command-collect more 0 0 {more [-t=<time, se -timescan def now>|-u=<utime, unix time>]} {
+	exec >@stdout 2>@stderr $::env(EDITOR) [myhome [pam t [pam u [clock seconds]] mytimescan]]
 } {create record}
 
 command-collect safe 2 0 {safe <file> <cat> [-r=<row of cat, def end>]} {
@@ -145,8 +145,8 @@ command-collect app 2 0 {app <data> <cat> [-r=<row>]} {
 	mycat_story [lindex $data 1] [lindex $data 0] [pam r -1]
 } {app line of data into cat}
 
-command-collect show 1 0 {show <cat> [-n line numeration] [-l=<limit>] [-p=<pager>] } {
-	set pager [open "|[pam p $::env(PAGER)]" w]
+command-collect show 1 0 {show <cat> [-n line numeration] [-l=<limit>]} {
+	set pager [open "|$::env(PAGER)" w]
 	set lim [pam l -1]
 	set catfile [open [myhome [lindex $data 0]] r]
 	while {[gets $catfile ln] >= 0} {
@@ -158,7 +158,7 @@ command-collect show 1 0 {show <cat> [-n line numeration] [-l=<limit>] [-p=<page
 	close $pager 
 }  {show records in category (rules can control interpritation line)}
 
-command-collect last 0 1 {last [<cat>, else show last] [-l=<record>] [-r=<row>]} {
+command-collect last 0 1 {last [<cat>, else show last record] [-l=<record>] [-r=<row>]} {
 	set last [pam l [lindex [lsort [myfiles [pam record-type]]] end]]
 	if {$last == {}} {puts "No records in my base!" } else { 
 		if [llength $data] {
@@ -167,8 +167,8 @@ command-collect last 0 1 {last [<cat>, else show last] [-l=<record>] [-r=<row>]}
 	}
 } {add last record into cat or add record onto last of category}
 
-command-collect member 0 0 {member [-tfrom=<-||->|-ufrom=<utime, def 0>] [-tto=<to, eq from def now>|-uto=<-||->] [-p=<pager>]} {
-	set pager [open "|[pam p $::env(PAGER)]" w]
+command-collect member 0 0 {member [-tfrom=<-||->|-ufrom=<utime, def 0>] [-tto=<to, eq from def now>|-uto=<-||->]} {
+	set pager [open "|$::env(PAGER)" w]
 	set tfrom [pam tfrom [pam ufrom 0] mytimescan]
 	set tto [pam tto [pam uto [clock seconds]] mytimescan]
 
@@ -179,7 +179,7 @@ command-collect member 0 0 {member [-tfrom=<-||->|-ufrom=<utime, def 0>] [-tto=<
 } {show records from diary use <viewer> without files and cats}
 
 command-collect log 1 -1 {log <log file> <descr part 0> .. <part n> [-t=<time>|-u=<utime>]
-	log <log file> [-p=<pager, def cat>] [-h hide date] } {
+	log <log file> [-h hide date] } {
 
 	set logfile [myhome "[lindex $data 0].[pam listext]"]
 	set msgline [lrange $data 1 end]
@@ -189,7 +189,7 @@ command-collect log 1 -1 {log <log file> <descr part 0> .. <part n> [-t=<time>|-
 			exit
 		}
 		set lfs [open $logfile r]
-		set pager [open "|[pam p cat]" w]
+		set pager [open "|$::env(PAGER)" w]
 		set hide_date [pam h false]
 		while {[gets $lfs ln] > 0} {
 			if [regexp {^(\d+)\t(.+)$} $ln all time mesg] {
