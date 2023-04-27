@@ -1,12 +1,12 @@
 #!/usr/bin/tclsh
-# more v0.8: System for keep diary and more 
-# Copyleft (Ɔ) 2022 Daniil Shvachkin <margenom at ya dot ru>
+# one write diary 1.0.0: System for keep diary and more 
+# Copyleft (Ɔ) 2022 Margenom
 # Released under the terms of the GNU General Public License version 2.0
 
 ### Command Line Input
 set CLI_PARAMS [list]; 
 set CLI_ARGS [list]
-# arg pair or param is -t -time -trap=no (QEMU stile), but no -trap yes
+# arg pair or param is -t -time -trap=no (QEMU or gcc stile), but no -trap yes
 foreach p $argv { if [regexp -- {^-([^=]+)(?:=(.+))?$} $p all pname pval] { 
 	lappend CLI_PARAMS [list $pname $pval] 
 } else { lappend CLI_ARGS $p} }
