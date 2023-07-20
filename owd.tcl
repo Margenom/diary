@@ -1,7 +1,7 @@
 #!/usr/bin/tclsh
-# one write diary 1.0.0: System for keep diary and more 
-# Copyleft (Ɔ) 2022 Margenom
-# Released under the terms of the GNU General Public License version 2.0
+# one write diary 1.0.1: System for keep diary and more
+#BSD 3-Clause License
+#Copyright (c) 2023, Margenom
 
 ### Command Line Input
 set CLI_PARAMS [list]; 
